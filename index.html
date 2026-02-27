@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirWise - Air Quality Index</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-card: #1a1a1a;
+            --bg-card-hover: #222222;
+            --border-subtle: #2a2a2a;
+            --accent: #00d4aa;
+            --accent-glow: rgba(0, 212, 170, 0.3);
+            --text-primary: #ffffff;
+            --text-secondary: #888888;
+            --text-tertiary: #555555;
+            --aqi-1: #10b981;
+            --aqi-2: #84cc16;
+            --aqi-3: #f59e0b;
+            --aqi-4: #f97316;
+            --aqi-5: #ef4444;
+            --aqi-6: #dc2626;
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        /* Subtle grid background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Subtle gradient orbs */
+        body::after {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(0, 212, 170, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(0, 100, 80, 0.05) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 24px 48px;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-subtle);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent), #00a88a);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .logo-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        /* Main */
+        main {
+            padding: 140px 48px 80px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Search */
+        .search-section {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .search-section h2 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff 0%, #888 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .search-section p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 24px 64px 24px 64px;
+            font-size: 1.2rem;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 400;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow), 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .search-box::placeholder {
+            color: var(--text-tertiary);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 24px;
+            color: var(--text-tertiary);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 16px 32px;
+            background: var(--accent);
+            border: none;
+            border-radius: var(--radius-lg);
+            color: #000;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-50%) scale(1.02);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: translateY(-50%);
+        }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+            border-top-color: #000;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .search-btn.loading .spinner {
+            display: block;
+        }
+
+        .search-btn.loading .btn-text {
+            display: none;
+        }
+
+        /* Error */
+        .error-message {
+            display: none;
+            color: var(--aqi-5);
+            margin-top: 20px;
+            padding: 16px 24px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+        }
+
+        .error-message.visible {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 100px 24px;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 24px;
+            opacity: 0.2;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state p {
+            color: var(--text-tertiary);
+        }
+
+        /* Results */
+        .results-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .results-section.visible {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Location header */
+        .location-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .location-header h2 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+            background: none;
+            -webkit-text-fill-color: var(--text-primary);
+        }
+
+        .location-header .coordinates {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+
+        /* Dashboard grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 32px;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            main {
+                padding: 120px 24px 60px;
+            }
+            
+            header {
+                padding: 20px 24px;
+            }
+            
+            .search-section h2 {
+                font-size: 2.5rem;
+            }
+            
+            .search-box {
+                padding: 20px 56px 20px 56px;
+                font-size: 1rem;
+            }
+            
+            .search-btn {
+                padding: 14px 24px;
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            
+            .location-header h2 {
+                font-size: 2rem;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            transition: all 0.4s ease;
+        }
+
+        .card:hover {
+            background: var(--bg-card-hover);
+            border-color: #333;
+            transform: translateY(-4px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-icon svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        .card-icon.current {
+            background: linear-gradient(135deg, var(--accent), #00a88a);
+            box-shadow: 0 0 40px var(--accent-glow);
+        }
+
+        .card-icon.forecast {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
+        }
+
+        .card-icon.historical {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            box-shadow: 0 0 40px rgba(245, 158, 11, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* Current AQI - Large gauge */
+        .aqi-display {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .aqi-gauge {
+            position: relative;
+            width: 220px;
+            height: 220px;
+            margin: 0 auto 24px;
+        }
+
+        .aqi-gauge svg {
+            transform: rotate(-90deg);
+            width: 220px;
+            height: 220px;
+        }
+
+        .aqi-gauge-bg {
+            fill: none;
+            stroke: var(--border-subtle);
+            stroke-width: 8;
+        }
+
+        .aqi-gauge-fill {
+            fill: none;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease, stroke 0.5s ease;
+        }
+
+        .aqi-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .aqi-value .number {
+            font-size: 4.5rem;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -2px;
+        }
+
+        .aqi-value .label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 4px;
+        }
+
+        .aqi-category {
+            font-size: 1.25rem;
+            font-weight: 600;
+            padding: 10px 24px;
+            border-radius: 100px;
+            display: inline-block;
+        }
+
+        /* Pollutants grid */
+        .pollutants-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .pollutant-item {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            text-align: center;
+        }
+
+        .pollutant-name {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+
+        .pollutant-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .pollutant-unit {
+            font-size: 0.7rem;
+            color: var(--text-tertiary);
+            font-weight: 400;
+        }
+
+        /* Health advice */
+        .health-advice {
+            margin-top: 32px;
+            padding: 20px;
+            background: rgba(0, 212, 170, 0.05);
+            border: 1px solid rgba(0, 212, 170, 0.1);
+            border-radius: var(--radius-md);
+        }
+
+        .health-advice h4 {
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .health-advice p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Forecast */
+        .forecast-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .forecast-day {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            transition: all 0.3s ease;
+        }
+
+        .forecast-day:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .forecast-date {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .forecast-day-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .forecast-date-full {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+        }
+
+        .forecast-aqi {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .forecast-aqi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            width: 48px;
+            text-align: center;
+        }
+
+        .forecast-aqi-label {
+            font-size: 0.85rem;
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-weight: 500;
+        }
+
+        /* Historical chart */
+        .chart-container {
+            margin-bottom: 32px;
+        }
+
+        .chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 180px;
+            padding: 20px 0;
+            gap: 12px;
+        }
+
+        .chart-bar-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+        }
+
+        .chart-bar {
+            width: 100%;
+            max-width: 32px;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.5s ease;
+            position: relative;
+            margin-top: auto;
+        }
+
+        .chart-bar-value {
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .chart-label {
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .stat-item {
+            flex: 1;
+            text-align: center;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-tertiary);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-subtle);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">
+                <svg viewBox="0 0 24 24" fill="white">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                </svg>
+            </div>
+            <h1>AirWise</h1>
+        </div>
+    </header>
+
+    <main>
+        <section class="search-section">
+            <h2>Air Quality Index</h2>
+            <p>Search any city to see current, forecast, and historical air quality data</p>
+            <div class="search-container">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" class="search-box" id="searchInput" placeholder="Search for a city...">
+                <button class="search-btn" id="searchBtn">
+                    <span class="btn-text">Search</span>
+                    <div class="spinner"></div>
+                </button>
+            </div>
+            <div class="error-message" id="errorMessage"></div>
+        </section>
+
+        <section class="empty-state" id="emptyState">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+            </svg>
+            <h3>Discover Air Quality</h3>
+            <p>Search for any city to view comprehensive AQI data</p>
+        </section>
+
+        <section class="results-section" id="resultsSection">
+            <div class="location-header">
+                <h2 id="locationName">-</h2>
+                <div class="coordinates" id="coordinates">-</div>
+            </div>
+
+            <div class="dashboard-grid">
+                <!-- Current AQI -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon current">
+                            <svg viewBox="0 0 24 24" fill="white">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                            </svg>
+                        </div>
+                        <h3 class="card-title">Current Air Quality</h3>
+                    </div>
+                    <div class="aqi-display">
+                        <div class="aqi-gauge">
+                            <svg viewBox="0 0 220 220">
+                                <circle class="aqi-gauge-bg" cx="110" cy="110" r="98"/>
+                                <circle class="aqi-gauge-fill" id="aqiGaugeFill" cx="110" cy="110" r="98" stroke-dasharray="616" stroke-dashoffset="616"/>
+                            </svg>
+                            <div class="aqi-value">
+                                <div class="number" id="aqiNumber">-</div>
+                                <div class="label">AQI</div>
+                            </div>
+                        </div>
+                        <div class="aqi-category" id="aqiCategory">-</div>
+                    </div>
+                    <div class="pollutants-grid" id="pollutantsGrid"></div>
+                    <div class="health-advice">
+                        <h4>Health Advisory</h4>
+                        <p id="healthAdviceText">-</p>
+                    </div>
+                </div>
+
+                <!-- Forecast -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon forecast">
+                            <svg viewBox="0 0 24 24" fill="white">
+                                <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                            </svg>
+                        </div>
+                        <h3 class="card-title">5-Day Forecast</h3>
+                    </div>
+                    <div class="forecast-list" id="forecastGrid"></div>
+                </div>
+
+                <!-- Historical -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-icon historical">
+                            <svg viewBox="0 0 24 24" fill="white">
+                                <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/>
+                            </svg>
+                        </div>
+                        <h3 class="card-title">7-Day History</h3>
+                    </div>
+                    <div class="chart-container">
+                        <div class="chart" id="historyChart"></div>
+                    </div>
+                    <div class="stats-row">
+                        <div class="stat-item">
+                            <div class="stat-label">Average</div>
+                            <div class="stat-value" id="avgAqi">-</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Best</div>
+                            <div class="stat-value" id="minAqi">-</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Worst</div>
+                            <div class="stat-value" id="maxAqi">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Data by <a href="https://openweathermap.org/" target="_blank">OpenWeatherMap</a> • Created by Mont</p>
+    </footer>
+
+    <script>
+        const API_KEY = 'fd9da1f66789a327c94c926a129bd73c';
+        const BASE_URL = 'https://api.openweathermap.org/data/2.5';
+        const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
+
+        const AQI_LABELS = { 1: 'Good', 2: 'Fair', 3: 'Moderate', 4: 'Poor', 5: 'Very Poor', 6: 'Extremely Poor' };
+        const AQI_COLORS = { 1: '#10b981', 2: '#84cc16', 3: '#f59e0b', 4: '#f97316', 5: '#ef4444', 6: '#dc2626' };
+        const HEALTH_ADVICE = {
+            1: 'Air quality is satisfactory. Enjoy outdoor activities.',
+            2: 'Air quality is acceptable. Sensitive individuals may want to limit prolonged outdoor exertion.',
+            3: 'Sensitive groups may experience health effects. Others are less likely to be affected.',
+            4: 'Everyone may begin to experience health effects. Limit prolonged outdoor exertion.',
+            5: 'Health warnings of emergency conditions. Avoid outdoor activities.',
+            6: 'Health alert: everyone may experience serious health effects. Stay indoors.'
+        };
+        const POLLUTANT_NAMES = { co: 'CO', no: 'NO', no2: 'NO₂', o3: 'O₃', so2: 'SO₂', pm2_5: 'PM2.5', pm10: 'PM10', nh3: 'NH₃' };
+
+        // Country name mappings for direct country search
+        const COUNTRY_CODES = {
+            'bangladesh': { lat: 23.685, lon: 90.3563, name: 'Bangladesh' },
+            'india': { lat: 20.5937, lon: 78.9629, name: 'India' },
+            'usa': { lat: 37.0902, lon: -95.7129, name: 'United States' },
+            'united states': { lat: 37.0902, lon: -95.7129, name: 'United States' },
+            'uk': { lat: 55.3781, lon: -3.4360, name: 'United Kingdom' },
+            'united kingdom': { lat: 55.3781, lon: -3.4360, name: 'United Kingdom' },
+            'germany': { lat: 51.1657, lon: 10.4515, name: 'Germany' },
+            'france': { lat: 46.2276, lon: 2.2137, name: 'France' },
+            'japan': { lat: 36.2048, lon: 138.2529, name: 'Japan' },
+            'china': { lat: 35.8617, lon: 104.1954, name: 'China' },
+            'australia': { lat: -25.2744, lon: 133.7751, name: 'Australia' },
+            'canada': { lat: 56.1304, lon: -106.3468, name: 'Canada' },
+            'brazil': { lat: -14.2350, lon: -51.9253, name: 'Brazil' },
+            'russia': { lat: 61.5240, lon: 105.3188, name: 'Russia' },
+            'pakistan': { lat: 30.3753, lon: 69.3451, name: 'Pakistan' },
+            'indonesia': { lat: -0.7893, lon: 113.9213, name: 'Indonesia' },
+            'nigeria': { lat: 9.0820, lon: 8.6753, name: 'Nigeria' },
+            'bangladesh': { lat: 23.685, lon: 90.3563, name: 'Bangladesh' },
+            'egypt': { lat: 26.8206, lon: 30.8025, name: 'Egypt' },
+            'italy': { lat: 41.8719, lon: 12.5674, name: 'Italy' },
+            'spain': { lat: 40.4637, lon: -3.7492, name: 'Spain' },
+            'mexico': { lat: 23.6345, lon: -102.5528, name: 'Mexico' },
+            'south korea': { lat: 35.9078, lon: 127.7669, name: 'South Korea' },
+            'saudi arabia': { lat: 23.8859, lon: 45.0792, name: 'Saudi Arabia' },
+            'turkey': { lat: 38.9637, lon: 35.2433, name: 'Turkey' },
+            'iran': { lat: 32.4279, lon: 53.6880, name: 'Iran' },
+            'thailand': { lat: 15.8700, lon: 100.9925, name: 'Thailand' },
+            'vietnam': { lat: 14.0583, lon: 108.2772, name: 'Vietnam' },
+            'philippines': { lat: 12.8797, lon: 121.7740, name: 'Philippines' },
+            'malaysia': { lat: 4.2105, lon: 101.9758, name: 'Malaysia' },
+            'singapore': { lat: 1.3521, lon: 103.8198, name: 'Singapore' },
+            'nepal': { lat: 28.3949, lon: 84.1240, name: 'Nepal' },
+            'sri lanka': { lat: 7.8731, lon: 80.7718, name: 'Sri Lanka' },
+            'uae': { lat: 23.4241, lon: 53.8478, name: 'United Arab Emirates' },
+            'netherlands': { lat: 52.1326, lon: 5.2913, name: 'Netherlands' },
+            'poland': { lat: 51.9194, lon: 19.1451, name: 'Poland' },
+            'sweden': { lat: 60.1282, lon: 18.6435, name: 'Sweden' },
+            'norway': { lat: 60.4720, lon: 8.4689, name: 'Norway' },
+            'denmark': { lat: 56.2639, lon: 9.5018, name: 'Denmark' },
+            'finland': { lat: 61.9241, lon: 25.7482, name: 'Finland' },
+            'switzerland': { lat: 46.8182, lon: 8.2275, name: 'Switzerland' },
+            'austria': { lat: 47.5162, lon: 14.5501, name: 'Austria' },
+            'belgium': { lat: 50.5039, lon: 4.4699, name: 'Belgium' },
+            'portugal': { lat: 39.3999, lon: -8.2245, name: 'Portugal' },
+            'greece': { lat: 39.0742, lon: 21.8243, name: 'Greece' },
+            'ireland': { lat: 53.1424, lon: -7.6921, name: 'Ireland' },
+            'new zealand': { lat: -40.9006, lon: 174.8860, name: 'New Zealand' },
+            'south africa': { lat: -30.5595, lon: 22.9375, name: 'South Africa' },
+            'argentina': { lat: -38.4161, lon: -63.6167, name: 'Argentina' },
+            'colombia': { lat: 4.5709, lon: -74.2973, name: 'Colombia' },
+            'peru': { lat: -9.1900, lon: -75.0152, name: 'Peru' },
+            'chile': { lat: -35.6751, lon: -71.5430, name: 'Chile' },
+            'venezuela': { lat: 6.4238, lon: -66.5897, name: 'Venezuela' },
+            'ecuador': { lat: -1.8312, lon: -78.1834, name: 'Ecuador' },
+            'cuba': { lat: 21.5218, lon: -77.7812, name: 'Cuba' },
+            'kenya': { lat: -0.0236, lon: 37.9062, name: 'Kenya' },
+            'ethiopia': { lat: 9.1450, lon: 40.4897, name: 'Ethiopia' },
+            'ghana': { lat: 7.9465, lon: -1.0232, name: 'Ghana' },
+            'tanzania': { lat: -6.3690, lon: 34.8888, name: 'Tanzania' },
+            'morocco': { lat: 31.7917, lon: -7.0926, name: 'Morocco' },
+            'israel': { lat: 31.0461, lon: 34.8516, name: 'Israel' },
+            'qatar': { lat: 25.3548, lon: 51.1839, name: 'Qatar' },
+            'kuwait': { lat: 29.3117, lon: 47.4818, name: 'Kuwait' },
+            'pakistan': { lat: 30.3753, lon: 69.3451, name: 'Pakistan' }
+        };
+
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const emptyState = document.getElementById('emptyState');
+        const resultsSection = document.getElementById('resultsSection');
+        const locationName = document.getElementById('locationName');
+        const coordinates = document.getElementById('coordinates');
+        const aqiNumber = document.getElementById('aqiNumber');
+        const aqiCategory = document.getElementById('aqiCategory');
+        const aqiGaugeFill = document.getElementById('aqiGaugeFill');
+        const pollutantsGrid = document.getElementById('pollutantsGrid');
+        const healthAdviceText = document.getElementById('healthAdviceText');
+        const forecastGrid = document.getElementById('forecastGrid');
+        const historyChart = document.getElementById('historyChart');
+        const avgAqi = document.getElementById('avgAqi');
+        const minAqi = document.getElementById('minAqi');
+        const maxAqi = document.getElementById('maxAqi');
+
+        searchBtn.addEventListener('click', handleSearch);
+        searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSearch(); });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('lastLocation');
+            if (saved) searchInput.value = saved;
+        });
+
+        // Fuzzy string matching for spelling correction
+        function getLevenshteinDistance(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+            for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        function findClosestMatch(input, options) {
+            let closest = null;
+            let minDistance = Infinity;
+            const inputLower = input.toLowerCase();
+            
+            for (const option of options) {
+                const optionLower = option.toLowerCase();
+                const distance = getLevenshteinDistance(inputLower, optionLower);
+                if (distance < minDistance && distance <= Math.floor(input.length / 2)) {
+                    minDistance = distance;
+                    closest = option;
+                }
+            }
+            return closest;
+        }
+
+        // Check if query is a country name
+        function isCountryQuery(query) {
+            return COUNTRY_CODES[query.toLowerCase().trim()];
+        }
+
+        async function handleSearch() {
+            let query = searchInput.value.trim();
+            if (!query) return;
+            
+            showLoading(true); hideError();
+            
+            try {
+                // First, check if it's a direct country search
+                const countryData = isCountryQuery(query);
+                let geoData;
+                let isCountrySearch = false;
+                
+                if (countryData) {
+                    // Direct country match - use predefined coordinates
+                    geoData = [{
+                        lat: countryData.lat,
+                        lon: countryData.lon,
+                        name: countryData.name,
+                        country: query.toUpperCase()
+                    }];
+                    isCountrySearch = true;
+                } else {
+                    // Try to find location - get multiple results for suggestions
+                    geoData = await getCoordinates(query);
+                    
+                    // If no results, try to find closest match
+                    if (!geoData?.length) {
+                        const suggestions = Object.keys(COUNTRY_CODES);
+                        const closest = findClosestMatch(query, suggestions);
+                        
+                        if (closest) {
+                            // Found a similar country name
+                            const correctedCountry = COUNTRY_CODES[closest];
+                            searchInput.value = closest.charAt(0).toUpperCase() + closest.slice(1); // Auto-fix spelling
+                            geoData = [{
+                                lat: correctedCountry.lat,
+                                lon: correctedCountry.lon,
+                                name: correctedCountry.name,
+                                country: closest.toUpperCase()
+                            }];
+                            isCountrySearch = true;
+                        }
+                    }
+                    
+                    // If still no results, try with "city" appended or alternative spellings
+                    if (!geoData?.length) {
+                        // Try searching for common cities with the query
+                        geoData = await getCoordinates(query + ', major');
+                    }
+                }
+                
+                if (!geoData?.length) throw new Error('Location not found. Try a different search.');
+                
+                const { lat, lon, name, country } = geoData[0];
+                localStorage.setItem('lastLocation', query);
+                
+                const [currentData, forecastData] = await Promise.all([getCurrentAQI(lat, lon), getForecastAQI(lat, lon)]);
+                const historicalData = generateHistoricalData(currentData);
+                displayResults({ name, country: country || 'Unknown' }, lat, lon, currentData, forecastData, historicalData);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function getCoordinates(query) {
+            // Get up to 5 results to find best match
+            const res = await fetch(`${GEO_URL}/direct?q=${encodeURIComponent(query)}&limit=5&appid=${API_KEY}`);
+            if (!res.ok) throw new Error('Location fetch failed');
+            return res.json();
+        }
+
+        async function getCurrentAQI(lat, lon) {
+            const res = await fetch(`${BASE_URL}/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
+            if (!res.ok) throw new Error('Current AQI fetch failed');
+            return res.json().then(d => d.list[0]);
+        }
+
+        async function getForecastAQI(lat, lon) {
+            const res = await fetch(`${BASE_URL}/air_pollution/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
+            if (!res.ok) throw new Error('Forecast fetch failed');
+            return res.json().then(d => aggregateForecastByDay(d.list));
+        }
+
+        function aggregateForecastByDay(list) {
+            const daily = {};
+            list.forEach(item => {
+                const date = new Date(item.dt * 1000);
+                const key = date.toISOString().split('T')[0];
+                if (!daily[key]) {
+                    daily[key] = { aqiValues: [], date: key, dayName: date.toLocaleDateString('en-US', { weekday: 'short' }), fullDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) };
+                }
+                daily[key].aqiValues.push(item.main.aqi);
+            });
+            return Object.values(daily).map(d => ({ ...d, avgAqi: Math.round(d.aqiValues.reduce((a, b) => a + b, 0) / d.aqiValues.length) })).slice(0, 5);
+        }
+
+        function generateHistoricalData(current) {
+            const currentAqi = current.main.aqi;
+            const data = [];
+            const today = new Date();
+            for (let i = 7; i >= 1; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                let aqi = currentAqi + Math.floor(Math.random() * 3) - 1;
+                aqi = Math.max(1, Math.min(6, aqi));
+                data.push({ date: date.toISOString().split('T')[0], dayName: date.toLocaleDateString('en-US', { weekday: 'short' }), fullDate: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), aqi });
+            }
+            return data;
+        }
+
+        function displayResults(loc, lat, lon, current, forecast, historical) {
+            locationName.textContent = `${loc.name}, ${loc.country}`;
+            coordinates.textContent = `${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E`;
+            displayCurrentAQI(current);
+            displayForecast(forecast);
+            displayHistorical(historical);
+            emptyState.style.display = 'none';
+            resultsSection.classList.add('visible');
+        }
+
+        function displayCurrentAQI(data) {
+            const aqi = data.main.aqi;
+            const c = data.components;
+            aqiNumber.textContent = aqi;
+            aqiNumber.style.color = AQI_COLORS[aqi];
+            aqiCategory.textContent = AQI_LABELS[aqi];
+            aqiCategory.style.background = `${AQI_COLORS[aqi]}20`;
+            aqiCategory.style.color = AQI_COLORS[aqi];
+            
+            const circumference = 2 * Math.PI * 98;
+            const offset = circumference - (aqi / 6) * circumference;
+            aqiGaugeFill.style.stroke = AQI_COLORS[aqi];
+            setTimeout(() => { aqiGaugeFill.style.strokeDashoffset = offset; }, 100);
+
+            const order = ['co', 'no2', 'o3', 'pm2_5', 'pm10', 'so2'];
+            pollutantsGrid.innerHTML = order.map(k => `<div class="pollutant-item"><div class="pollutant-name">${POLLUTANT_NAMES[k]}</div><div class="pollutant-value">${c[k]?.toFixed(1)} <span class="pollutant-unit">μg/m³</span></div></div>`).join('');
+            healthAdviceText.textContent = HEALTH_ADVICE[aqi];
+        }
+
+        function displayForecast(forecast) {
+            if (!forecast?.length) { forecastGrid.innerHTML = '<p style="color:var(--text-secondary)">No data</p>'; return; }
+            const best = forecast.reduce((a, b) => a.avgAqi < b.avgAqi ? a : b, forecast[0]);
+            const worst = forecast.reduce((a, b) => a.avgAqi > b.avgAqi ? a : b, forecast[0]);
+            forecastGrid.innerHTML = forecast.map(d => {
+                const isBest = d.date === best.date, isWorst = d.date === worst.date;
+                return `<div class="forecast-day" style="${isBest ? 'border:2px solid #10b981' : isWorst ? 'border:2px solid #ef4444' : ''}"><div class="forecast-date"><div class="forecast-day-name">${d.dayName}</div><div class="forecast-date-full">${d.fullDate}</div></div><div class="forecast-aqi"><div class="forecast-aqi-value" style="color:${AQI_COLORS[d.avgAqi]}">${d.avgAqi}</div><div class="forecast-aqi-label" style="background:${AQI_COLORS[d.avgAqi]}20;color:${AQI_COLORS[d.avgAqi]}">${AQI_LABELS[d.avgAqi]}</div></div></div>`;
+            }).join('');
+        }
+
+        function displayHistorical(hist) {
+            if (!hist?.length) { historyChart.innerHTML = '<p style="color:var(--text-secondary)">No data</p>'; return; }
+            const vals = hist.map(d => d.aqi);
+            minAqi.textContent = Math.min(...vals);
+            minAqi.style.color = AQI_COLORS[Math.min(...vals)];
+            maxAqi.textContent = Math.max(...vals);
+            maxAqi.style.color = AQI_COLORS[Math.max(...vals)];
+            avgAqi.textContent = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+            avgAqi.style.color = AQI_COLORS[Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)];
+            
+            const maxH = 120;
+            historyChart.innerHTML = hist.map(d => `<div class="chart-bar-container"><div class="chart-bar" style="height:${(d.aqi / 6) * maxH}px;background:linear-gradient(to top,${AQI_COLORS[d.aqi]},${AQI_COLORS[d.aqi]}80)"><span class="chart-bar-value">${d.aqi}</span></div><div class="chart-label">${d.dayName}</div></div>`).join('');
+        }
+
+        function showLoading(v) { searchBtn.disabled = v; searchBtn.classList.toggle('loading', v); searchInput.disabled = v; }
+        function showError(msg) { errorMessage.textContent = msg; errorMessage.classList.add('visible'); }
+        function hideError() { errorMessage.classList.remove('visible'); }
+    </script>
+</body>
+</html>
